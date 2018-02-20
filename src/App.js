@@ -11,9 +11,11 @@ import sampleData from './DataSample.js'
 
 class App extends Component {
 constructor(){
-    super()
-    this.state={post:sampleData.post, visits:55, isLoading:false, isUploaded:false}
-    this.handleUpload=this.handleUpload.bind(this)
+    super();
+    this.state={post:sampleData.post, visits:55, isLoading:false, isUploaded:false};
+    this.handleUpload=this.handleUpload.bind(this);
+    this.handleLike=this.handleLike.bind(this);
+    this.handleCommentSubmit=this.handleCommentSubmit.bind(this)
 }
 componentDidMount(){
   fetch('/api/visits')
@@ -37,9 +39,11 @@ fetchData(){
     }
   })
 }
+
 componentDidUpdate(){
-  console.log('updated')
+  console.log('updated');
 }
+
 handleUpload(e){
     e.preventDefault();
     let formData = new FormData();
@@ -69,13 +73,61 @@ handleStat(){
     this.state.post.forEach(each=> {
       totalComment+=each.comment.length;
       totalLike+=each.like
-    })
+    });
     return {
       totalLike:totalLike,
       totalComment:totalComment,
       totalImage:totalImage
     }
-  }
+}
+
+handleLike(id){
+  let index=this.state.post.findIndex(each=>each._id==id);
+  let updatedLike = this.state.post[index].like+1;
+  let newPostState=this.state.post.slice();
+  newPostState[index].like=updatedLike;
+  this.setState({
+    post:newPostState
+  });
+  fetch('/image/updateLike',{
+        method:"POST",
+        headers:{'Accept':'application/json','Content-Type': 'application/json'},
+        //Content-type needed to get req.body in the server
+        body:JSON.stringify(newPostState[index])
+        //newPostState[index] has the information of 1 specific image
+      }).catch(err=>{console.log('like/comment/view err:', err)});
+}
+
+handleCommentSubmit(e,id){
+    e.preventDefault()
+    let index=this.state.post.findIndex(each=>each._id==id);//find the exact picture
+    let text =document.getElementById('postComment').value //get the comment value
+    if(text==="") {return}
+    if (text.length>90)
+      { 
+        alert('your comment should less than 90 charaters'); 
+        return
+      }
+    let comment={comment:text,
+          name:'spiderman',
+          avatar:'http://localhost:3001/upload/1517224582889&untitled.png',
+          date:0
+          };
+    let newPostState=this.state.post.slice();//avoid mutating state
+    newPostState[index].comment=[comment].concat(this.state.post[index].comment)
+    this.setState({post:newPostState})
+
+    fetch('/image/updateComment',{
+        method:"POST",
+        headers:{'Accept':'application/json','Content-Type': 'application/json'},
+        //Content-type needed to get req.body in the server
+        body:JSON.stringify({...comment,_id:this.state.post[index]._id})
+        //add the id to the POST to find document to update in the mongo server
+      })
+      .catch(err=>{console.log('like/comment/view err:', err)})
+    document.getElementById('postComment').value=""
+
+}
 
   render() {
     
@@ -84,7 +136,12 @@ handleStat(){
       <div className="container">
           <Header/>
      	 	  <Col md={8} sm={12} >
-     	 		   <Main post={this.state.post} handleUpload={this.handleUpload} /> 
+
+     	 		   <Main post={this.state.post}
+              handleUpload={this.handleUpload}
+              handleLike={this.handleLike}
+              handleCommentSubmit={this.handleCommentSubmit} /> 
+
       		</Col>
           <Col md={4}  sm={6}  xs={12}>
       			<Stats 

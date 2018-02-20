@@ -7,16 +7,18 @@ const upload=require('./upload')
 const MongoClient=require('mongodb').MongoClient;
 const assert=require('assert');
 const url= 'mongodb://localhost:27017';
-const imagedb='ImageUpload';
-const visitdb="visitCounter"
+const imagedb='ImageUploadCollection';
+const visitdb="visitCounterCollection"//separate collection for statics
 const myCollection='imageAPI'
 const localhost="localhost:3001"
+const ObjectId=require('mongodb').ObjectID
+const passport = require('passport')
+
 MongoClient.connect(url,(err,client)=>{
 	assert.equal(null,err);
 	console.log('server connected');
 	const db=client.db(imagedb);
 	//handle /upload post
-
 	app.post('/upload', upload(multer).single('imageFile'),(req,res,next)=>{
 		console.log('upload successfully')
 		let endpoint=req.file.path
@@ -49,7 +51,7 @@ MongoClient.connect(url,(err,client)=>{
 			res.json(result)
 		})
 
-	})
+	});
 	app.get('/api/visits',(req,res,next)=>{
 		db.collection(visitdb).updateOne(
 			{_id:'views counter'},//each time the COMPONENT is rendered counted as a visit
@@ -60,30 +62,47 @@ MongoClient.connect(url,(err,client)=>{
 			res.json(result[0])
 		})
 		)
-	})
+	});
 
-	//handle like and comment post
-	app.post('/image/:id/comment',(req,res,next)=>{//not tested yet
-		db.collection(myCollection).findByIdAndUpdate(req.params.id,
-			{$push:{
-				comment:{
-					avatar:'avatar.jpg',
-					name:'super man',
-					comment:req.body.comment,
-					date:0
-				}
-			}}
+	app.post('/image/updateLike',(req,res,next)=>{
+		let query = {_id:ObjectId(req.body._id)}
+		console.log(req.body)
+		db.collection(myCollection).updateOne(
+			query,
+			{
+				$set:{like:req.body.like}
+			}
 		)
-	})
-	app.post('/image/:id/like',(req,res,next)=>{
-		db.collection(myCollection).findByIdAndUpdate(req.params.id,{
-			$inc:{like:1}
+	});
+	app.post('/image/updateComment',(req,res,next)=>{
+		let query = {_id:ObjectId(req.body._id)}
+		console.log(req.body)
+		db.collection(myCollection).update(query,
+		{
+			$push:{
+				"comment":{
+					'comment':req.body.comment,
+					'name':req.body.name,
+					'avatar':req.body.avatar,
+					'date':req.body.date
+				}
+			}
 		})
+	});
+
+
+	app.get('/',passport.authenticate('facebook', { 
+      scope : ['public_profile', 'email']
+	}));
+
+	app.get('/auth/facebook/callback',
+        passport.authenticate('facebook', {
+            successRedirect : '/profile',
+            failureRedirect : '/failAuthen'
+        }));
+	app.get('/profile',(req,res)=>{
+		res.send('hello')
 	})
-
-})//outer brace
-
-
-//not handle POST /updateImageDetail
+})//outer bracket
 app.listen(3001)
 

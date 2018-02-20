@@ -6,13 +6,15 @@ import {FormGroup, FormControl, ControlLabel} from 'react-bootstrap'
 class Comments extends Component{
 	constructor(props){
 		super(props);
-		this.handleChange=this.handleChange.bind(this)
-		console.log(this.counter)
+		this.handleChange=this.handleChange.bind(this);
+
+		console.log(this.props.CommentData)
 	}
 	handleChange(e){
-		this.counter=e.target.value.length;
+		this.counter=e.target.value.length;//to count the number of charaters
 		this.forceUpdate()
 	}
+	
 	render(){
 	return (
 		<Panel>
@@ -22,7 +24,7 @@ class Comments extends Component{
 						<b style={{verticalAlign:'middle'}}>Comments</b>
 					</Col>
 					<Col xs='6' sm="3" smOffset="8" mdOffset="7" lgOffset="8">
-						<Button style={{}} onClick={this.props.handleCommentSubmit}>
+						<Button onClick={(e)=>this.props.handleCommentSubmit(e)}  >
 							<Glyphicon glyph='send' />{' '}
 							Post Comment...
 						</Button>
@@ -30,7 +32,7 @@ class Comments extends Component{
 				</Row>
 			</Panel.Heading>
 			<Panel.Body>
-				<form onSubmit={this.props.handleCommentSubmit}>
+				<form onSubmit={(e)=>this.props.handleCommentSubmit(e)}>
 					<FormGroup  >
 						<ControlLabel>What's your thought</ControlLabel>{' '}
 						<small >

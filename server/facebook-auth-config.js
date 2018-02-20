@@ -1,5 +1,5 @@
-const FacebookAppID='2009414815986385'
-	, FacebookAppSecret='876685892d1d91719d96acc184b99768'
+const FacebookAppID='your id'
+	, FacebookAppSecret='your clientSecret'
 	, passport = require('passport')
 	, FacebookStrategy=require('passport-facebook')
 
@@ -17,7 +17,8 @@ passport.deserializeUser(function(user, done) {
   done(null, user);
 });
 const facebookCB=(accessToken,refreshToken,profile,done)=>{
-	console.log(profile);
+
+	console.log(profile.photos[0].value)
 	done(null,profile)
 
 }

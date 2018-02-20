@@ -12,6 +12,7 @@ const path=require('path')
 module.exports= (app)=>{
 	app.use(morgan('dev'));
 	app.use(passport.initialize());
+	app.use(passport.session());
 	app.use(bodyParser());
 	app.use('/upload',express.static('upload'))
 	return app

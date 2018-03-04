@@ -1,23 +1,26 @@
 const express= require('express');
 const serverApp = express();
 const config = require('./config');
-const app = config(serverApp)
-const multer=require('multer')
-const upload=require('./upload')
+const app = config(serverApp);
+const multer=require('multer');
+const upload=require('./upload');
 const MongoClient=require('mongodb').MongoClient;
 const assert=require('assert');
 const url= 'mongodb://localhost:27017';
-const imagedb='ImageUploadCollection';
-const visitdb="visitCounterCollection"//separate collection for statics
-const myCollection='imageAPI'
-const localhost="localhost:3001"
-const ObjectId=require('mongodb').ObjectID
-const passport = require('passport')
+const imagedb='ImageUploadCollection'; //images data collection
+const visitdb="visitCounterCollection";//visit counter collection
+const myCollection='imageAPI';
+const localhost="localhost:3001";
+const ObjectId=require('mongodb').ObjectID;
+const passport = require('passport');
+const facebookAuth=require('./facebook-auth-config')
+
 
 MongoClient.connect(url,(err,client)=>{
 	assert.equal(null,err);
 	console.log('server connected');
 	const db=client.db(imagedb);
+	facebookAuth(passport,db)//run facebook authentication	
 	//handle /upload post
 	app.post('/upload', upload(multer).single('imageFile'),(req,res,next)=>{
 		console.log('upload successfully')
@@ -66,7 +69,6 @@ MongoClient.connect(url,(err,client)=>{
 
 	app.post('/image/updateLike',(req,res,next)=>{
 		let query = {_id:ObjectId(req.body._id)}
-		console.log(req.body)
 		db.collection(myCollection).updateOne(
 			query,
 			{
@@ -76,7 +78,6 @@ MongoClient.connect(url,(err,client)=>{
 	});
 	app.post('/image/updateComment',(req,res,next)=>{
 		let query = {_id:ObjectId(req.body._id)}
-		console.log(req.body)
 		db.collection(myCollection).update(query,
 		{
 			$push:{
